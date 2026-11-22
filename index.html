@@ -1,0 +1,1808 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>素数合成器 · 黎曼波的乐器 | 30秒听懂并亲手演奏黎曼猜想</title>
+  <style>
+    :root {
+      --bg-cream: #faf6ee;
+      --bg-paper: #fffdf8;
+      --ink-navy: #182338;
+      --ink-sub: #5b6578;
+      --gold: #d98a1c;
+      --gold-bright: #f5b038;
+      --coral: #e05236;
+      --indigo: #284b9e;
+      --emerald: #179460;
+      --panel-border: rgba(24, 35, 56, 0.10);
+      --shadow-soft: 0 10px 30px rgba(24, 35, 56, 0.08);
+    }
+
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden;
+      background: radial-gradient(circle at 18% 0%, #fffbf2 0%, #f5efe3 52%, #ebe4d6 100%);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: var(--ink-navy);
+      touch-action: none;
+    }
+
+    .app {
+      display: flex; flex-direction: column;
+      width: 100vw; height: 100vh; height: 100dvh;
+      padding: 10px 14px 10px;
+      gap: 9px;
+    }
+
+    /* 顶部仪表头 */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; flex-shrink: 0;
+      background: rgba(255, 253, 248, 0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow-soft), inset 0 1px 0 #fff;
+      border-radius: 18px;
+      padding: 8px 13px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .brand-mark {
+      width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0;
+      background: linear-gradient(135deg, #1b2d56 0%, #2a498f 55%, #d98a1c 100%);
+      color: #fffaf0; display: grid; place-items: center;
+      font-family: Georgia, "Times New Roman", serif; font-size: 21px; font-weight: 700;
+      box-shadow: 0 4px 12px rgba(27, 45, 86, 0.25);
+    }
+    .brand-txt h1 {
+      margin: 0; font-size: 15.5px; font-weight: 800; letter-spacing: 0.2px;
+      display: flex; align-items: center; gap: 6px; flex-wrap: nowrap;
+    }
+    .brand-tag {
+      font-size: 10.5px; font-weight: 800; padding: 2px 8px; border-radius: 999px;
+      background: rgba(217, 138, 28, 0.14); color: #a96306; border: 1px solid rgba(217, 138, 28, 0.34);
+      white-space: nowrap;
+    }
+    .brand-sub { font-size: 11px; color: var(--ink-sub); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* 三大模式切换 */
+    .mode-tabs {
+      display: flex; gap: 4px; padding: 3px; border-radius: 13px;
+      background: rgba(24, 35, 56, 0.06);
+      border: 1px solid rgba(24, 35, 56, 0.06);
+      flex-shrink: 0;
+    }
+    .mtab {
+      border: none; background: transparent; color: var(--ink-sub);
+      padding: 7px 12px; border-radius: 9px; font-size: 12px; font-weight: 800;
+      cursor: pointer; transition: all 0.18s ease; white-space: nowrap;
+    }
+    .mtab:hover { color: var(--ink-navy); }
+    .mtab.active {
+      background: #1b2d56; color: #fffdf8;
+      box-shadow: 0 4px 12px rgba(27, 45, 86, 0.24);
+    }
+    .mtab.break-tab.active {
+      background: linear-gradient(135deg, #df4c31, #c4321c); color: #fff;
+      box-shadow: 0 4px 14px rgba(223, 76, 49, 0.32);
+    }
+    .mtab.sym-tab.active {
+      background: linear-gradient(135deg, #d98a1c, #b76b08); color: #fff;
+      box-shadow: 0 4px 14px rgba(217, 138, 28, 0.30);
+    }
+
+    /* 右上角遥测与帮助入口 */
+    .meters { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .meter {
+      background: rgba(250, 246, 238, 0.92);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px; padding: 4px 10px; text-align: center; min-width: 76px;
+    }
+    .meter-k { font-size: 10px; color: var(--ink-sub); font-weight: 700; }
+    .meter-v { font-size: 16px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 1px; color: var(--ink-navy); }
+    .meter-v.good { color: var(--emerald); }
+    .meter-v.gold { color: var(--gold); }
+    .meter-v.danger { color: var(--coral); }
+
+    .icon-btn {
+      border: 1px solid var(--panel-border); background: #fffdf8; color: var(--ink-navy);
+      border-radius: 11px; padding: 7px 10px; font-size: 12px; font-weight: 800; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;
+    }
+    .icon-btn.on { border-color: rgba(217, 138, 28, 0.45); background: rgba(245, 176, 56, 0.14); color: #9a5804; }
+    .icon-btn.help { border-color: rgba(40, 75, 158, 0.28); background: rgba(40, 75, 158, 0.08); color: #1d3d85; }
+
+    /* 中央核心双面板 */
+    .stage {
+      flex: 1; min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(340px, 0.94fr) minmax(460px, 1.36fr);
+      gap: 11px;
+    }
+
+    .card {
+      position: relative;
+      display: flex; flex-direction: column;
+      background: var(--bg-paper);
+      border: 1px solid rgba(24, 35, 56, 0.10);
+      border-radius: 20px;
+      box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+      overflow: hidden;
+      min-height: 0;
+    }
+    .card.chaos-alert {
+      border-color: rgba(224, 82, 54, 0.65);
+      box-shadow: 0 0 0 3px rgba(224, 82, 54, 0.16), 0 14px 34px rgba(224, 82, 54, 0.15);
+    }
+
+    .card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 14px 7px;
+      border-bottom: 1px solid rgba(24, 35, 56, 0.06);
+      flex-shrink: 0; gap: 8px;
+      background: linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(250, 245, 235, 0.72));
+    }
+    .card-title { font-size: 13px; font-weight: 800; color: var(--ink-navy); display: flex; align-items: center; gap: 7px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 8px rgba(217, 138, 28, 0.65); flex-shrink: 0; }
+    .dot.blue { background: var(--indigo); box-shadow: 0 0 8px rgba(40, 75, 158, 0.5); }
+    .dot.red { background: var(--coral); box-shadow: 0 0 8px rgba(224, 82, 54, 0.65); }
+    .card-badge {
+      font-size: 11px; font-weight: 700; color: var(--ink-sub);
+      background: rgba(24, 35, 56, 0.05); padding: 3px 9px; border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .canvas-wrap { position: relative; flex: 1; min-height: 0; width: 100%; }
+    canvas.main-cv { display: block; width: 100%; height: 100%; cursor: grab; }
+    canvas.main-cv:active { cursor: grabbing; }
+
+    /* 人性化实时调音教练栏（收音机信号强度 + 明确方向指引，零基础一秒上手！） */
+    .coach-bar {
+      position: absolute; top: 9px; left: 10px; right: 10px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 7px 11px; border-radius: 13px;
+      background: rgba(16, 24, 44, 0.84);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 236, 188, 0.24);
+      color: #fffdf8;
+      font-size: 11.5px; font-weight: 700;
+      pointer-events: none; z-index: 5;
+      box-shadow: 0 8px 20px rgba(10, 18, 36, 0.24);
+    }
+    .coach-dirs { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .dir-pill {
+      padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 800;
+      background: rgba(255, 255, 255, 0.12); color: #fef3c7;
+      white-space: nowrap;
+    }
+    .dir-pill.ok { background: rgba(23, 148, 96, 0.34); color: #6ee7b7; border: 1px solid rgba(110, 231, 183, 0.4); }
+    .dir-pill.warn { background: rgba(239, 68, 68, 0.32); color: #fecaca; border: 1px solid rgba(252, 165, 165, 0.35); }
+    .signal-box { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .signal-track {
+      width: 68px; height: 7px; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.16); overflow: hidden;
+    }
+    .signal-fill {
+      height: 100%; width: 20%; border-radius: 999px;
+      background: linear-gradient(90deg, #f87171, #fbbf24, #34d399);
+      transition: width 0.08s linear;
+    }
+
+    /* 底部人话科普解释条 */
+    .story-bar {
+      position: absolute; bottom: 10px; left: 10px; right: 10px;
+      padding: 8px 13px; border-radius: 13px;
+      background: rgba(255, 252, 245, 0.93);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(24, 35, 56, 0.10);
+      box-shadow: 0 6px 20px rgba(24, 35, 56, 0.09);
+      font-size: 12px; line-height: 1.48; color: var(--ink-navy);
+      display: flex; align-items: center; gap: 8px;
+      z-index: 5;
+    }
+    .story-bar strong { color: #b76b08; }
+    .story-bar.danger { background: rgba(254, 242, 240, 0.95); border-color: rgba(224, 82, 54, 0.45); color: #8c1f0e; }
+    .story-bar.danger strong { color: #c9371d; }
+    .story-bar.win { background: rgba(236, 253, 245, 0.95); border-color: rgba(23, 148, 96, 0.42); color: #0b5d3b; }
+    .story-bar.win strong { color: #0f764a; }
+
+    /* 底部实体操作台 */
+    .dock {
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      background: rgba(255, 253, 248, 0.92);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.94);
+      box-shadow: var(--shadow-soft);
+      border-radius: 18px;
+      padding: 8px 13px;
+    }
+    .dock-left { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; min-width: 0; }
+    .dock-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .btn {
+      border: 1px solid rgba(24, 35, 56, 0.12);
+      background: #fff; color: var(--ink-navy);
+      border-radius: 11px; padding: 8px 12px;
+      font-size: 12px; font-weight: 800; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 5px;
+      transition: transform 0.1s, filter 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { filter: brightness(0.98); }
+    .btn:active { transform: scale(0.96); }
+    .btn.primary { background: linear-gradient(135deg, #1b2d56, #284b9e); color: #fff; border-color: transparent; box-shadow: 0 5px 14px rgba(40, 75, 158, 0.24); }
+    .btn.gold { background: linear-gradient(135deg, #e59824, #c9770c); color: #fff; border-color: transparent; box-shadow: 0 5px 14px rgba(217, 138, 28, 0.28); }
+    .btn.coral { background: linear-gradient(135deg, #ea583a, #c9371d); color: #fff; border-color: transparent; box-shadow: 0 5px 14px rgba(224, 82, 54, 0.28); }
+    .btn.emerald { background: linear-gradient(135deg, #1aa369, #127d4f); color: #fff; border-color: transparent; }
+
+    .slider-box {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(24, 35, 56, 0.045);
+      border: 1px solid rgba(24, 35, 56, 0.08);
+      border-radius: 11px; padding: 5px 11px;
+    }
+    .slider-box label { font-size: 11.5px; font-weight: 800; color: var(--ink-navy); white-space: nowrap; }
+    .slider-box input[type=range] { width: 150px; accent-color: var(--gold); cursor: pointer; }
+    .slider-val { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 800; font-size: 12.5px; color: var(--gold); min-width: 50px; text-align: right; }
+
+    .prime-strip { display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .prime-strip::-webkit-scrollbar { display: none; }
+    .p-chip {
+      width: 25px; height: 24px; border-radius: 7px; flex-shrink: 0;
+      display: grid; place-items: center;
+      font-size: 10.5px; font-weight: 800; font-variant-numeric: tabular-nums;
+      background: rgba(24, 35, 56, 0.06); color: #8c96a8;
+      border: 1px solid rgba(24, 35, 56, 0.06);
+      transition: all 0.25s cubic-bezier(0.2, 1.4, 0.4, 1);
+    }
+    .p-chip.lit {
+      background: linear-gradient(135deg, #f5b038, #d98a1c);
+      color: #fffdf8; border-color: #c9770c;
+      box-shadow: 0 3px 9px rgba(217, 138, 28, 0.35);
+      transform: translateY(-1px);
+    }
+    .p-chip.broken { background: linear-gradient(135deg, #ef4444, #b91c1c); color: #fff; border-color: #991b1b; }
+
+    /* 零遮挡顶部中缝轻提示浮标（绝不盖住底部解说栏和曲线主体！） */
+    .lock-toast {
+      position: fixed; top: 72px; left: 50%; transform: translate(-50%, -10px) scale(0.92);
+      max-width: min(90vw, 520px);
+      background: rgba(20, 30, 52, 0.93); color: #fffaf0;
+      border: 1.5px solid rgba(245, 176, 56, 0.72);
+      border-radius: 999px; padding: 8px 18px;
+      font-size: 13px; font-weight: 800; text-align: center;
+      box-shadow: 0 14px 36px rgba(15, 23, 42, 0.30);
+      pointer-events: none; opacity: 0; z-index: 45;
+      transition: all 0.22s cubic-bezier(0.2, 1.3, 0.4, 1);
+      line-height: 1.35;
+    }
+    .lock-toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+
+    /* ================================================================
+       零门槛「3步秒懂黎曼猜想」互动故事引导浮层
+       ================================================================ */
+    .guide-mask {
+      position: fixed; inset: 0;
+      background: rgba(18, 26, 44, 0.52);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none; place-items: center; z-index: 70; padding: 16px;
+    }
+    .guide-mask.show { display: grid; }
+    .guide-card {
+      width: min(94vw, 600px);
+      background: linear-gradient(165deg, #fffdf8 0%, #f9f3e6 100%);
+      border-radius: 26px; padding: 22px 24px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      box-shadow: 0 28px 72px rgba(15, 23, 42, 0.30);
+      position: relative;
+    }
+    .guide-top {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .guide-steps { display: flex; gap: 6px; }
+    .gstep-dot {
+      height: 6px; width: 28px; border-radius: 999px;
+      background: rgba(24, 35, 56, 0.14); transition: all 0.25s;
+    }
+    .gstep-dot.active { width: 46px; background: linear-gradient(90deg, #d98a1c, #f5b038); }
+    .gstep-dot.done { background: #179460; }
+    .guide-skip {
+      border: none; background: transparent; color: var(--ink-sub);
+      font-size: 12.5px; font-weight: 700; cursor: pointer; padding: 4px 8px;
+    }
+    .guide-skip:hover { color: var(--ink-navy); }
+
+    .guide-kicker {
+      display: inline-block; padding: 3px 10px; border-radius: 999px;
+      font-size: 11.5px; font-weight: 800; margin-bottom: 8px;
+      background: rgba(217, 138, 28, 0.14); color: #a96306;
+    }
+    .guide-title { margin: 0 0 10px; font-size: 22px; font-weight: 900; color: var(--ink-navy); line-height: 1.28; }
+    .guide-body { font-size: 14px; line-height: 1.68; color: #374151; margin-bottom: 14px; }
+    .guide-body strong { color: #182338; }
+    .guide-body .hl { color: #c9690c; font-weight: 800; }
+    .guide-body .hl-red { color: #c9371d; font-weight: 800; }
+
+    /* 图解演示区（3 步各自配上极度直观的视觉图例卡片！） */
+    .guide-visual {
+      background: #16213a;
+      border-radius: 16px; padding: 14px 16px; margin-bottom: 16px;
+      color: #fffdf8;
+      border: 1px solid rgba(245, 176, 56, 0.28);
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    }
+    .gv-box {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 12px; padding: 10px 10px; text-align: center;
+    }
+    .gv-ico { font-size: 22px; margin-bottom: 5px; }
+    .gv-t { font-size: 12px; font-weight: 800; color: #fde68a; margin-bottom: 3px; }
+    .gv-d { font-size: 11px; color: rgba(241, 245, 249, 0.84); line-height: 1.4; }
+
+    .guide-foot {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+
+    /* 声纹明信片弹窗 */
+    .modal-mask {
+      position: fixed; inset: 0; background: rgba(18, 26, 44, 0.50);
+      backdrop-filter: blur(8px);
+      display: none; place-items: center; z-index: 65; padding: 16px;
+    }
+    .modal-mask.show { display: grid; }
+    .modal-card {
+      width: min(94vw, 560px);
+      background: #fffdf8; border-radius: 24px; padding: 20px 22px;
+      border: 1px solid rgba(255, 255, 255, 0.92);
+      box-shadow: 0 28px 70px rgba(15, 23, 42, 0.28);
+      text-align: center;
+    }
+    .modal-card h2 { margin: 0 0 6px; font-size: 20px; color: var(--ink-navy); }
+    .modal-card p { margin: 0 0 12px; font-size: 13px; color: var(--ink-sub); line-height: 1.5; }
+    .poster-preview {
+      width: 100%; border-radius: 14px; border: 1px solid rgba(24, 35, 56, 0.10);
+      box-shadow: 0 10px 26px rgba(24, 35, 56, 0.12); display: block; margin-bottom: 14px;
+    }
+    .modal-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+    /* 手机竖屏原生适配 */
+    @media (max-width: 860px) {
+      .app { padding: 7px 7px max(7px, env(safe-area-inset-bottom)); gap: 6px; }
+      .topbar { flex-wrap: wrap; padding: 7px 9px; gap: 6px; border-radius: 14px; }
+      .brand-sub { display: none; }
+      .brand-mark { width: 28px; height: 28px; font-size: 16px; border-radius: 8px; }
+      .brand-txt h1 { font-size: 13.5px; }
+      .meters { width: 100%; justify-content: space-between; gap: 5px; }
+      .meter { flex: 1; min-width: 0; padding: 3px 5px; }
+      .meter-v { font-size: 14px; }
+      .icon-btn { padding: 6px 8px; font-size: 11px; }
+      .mode-tabs { width: 100%; order: 3; }
+      .mtab { flex: 1; padding: 6px 4px; font-size: 11.5px; text-align: center; }
+      .stage { grid-template-columns: 1fr; grid-template-rows: 1.05fr 0.95fr; gap: 6px; }
+      .card { border-radius: 15px; }
+      .card-head { padding: 6px 10px 5px; }
+      .card-title { font-size: 11.5px; }
+      .card-badge { font-size: 10px; padding: 2px 7px; }
+      .coach-bar { top: 6px; left: 6px; right: 6px; padding: 5px 8px; font-size: 10.5px; }
+      .signal-track { width: 44px; }
+      .story-bar { bottom: 6px; left: 6px; right: 6px; padding: 6px 9px; font-size: 10.8px; }
+      .dock { flex-direction: column; align-items: stretch; padding: 6px 8px; gap: 6px; border-radius: 14px; }
+      .dock-left { width: 100%; gap: 5px; }
+      .dock-left .btn { flex: 1; justify-content: center; padding: 7px 4px; font-size: 11px; }
+      .dock-right { width: 100%; justify-content: space-between; gap: 6px; }
+      .prime-strip { flex: 1; min-width: 0; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; gap: 3px; }
+      .prime-strip::-webkit-scrollbar { display: none; }
+      .slider-box { flex: 1.7; min-width: 0; padding: 4px 8px; }
+      .slider-box label { display: none; }
+      .slider-box input[type=range] { flex: 1; width: auto; min-width: 60px; }
+      .p-chip { flex-shrink: 0; width: 20px; height: 20px; font-size: 9.5px; }
+      .lock-toast { top: 108px; font-size: 12px; padding: 7px 14px; border-radius: 14px; }
+      .guide-card { padding: 18px 16px 16px; border-radius: 20px; }
+      .guide-title { font-size: 18px; }
+      .guide-body { font-size: 13px; }
+      .guide-visual { grid-template-columns: 1fr; gap: 7px; padding: 10px 12px; }
+      .gv-box { display: flex; align-items: center; gap: 10px; text-align: left; padding: 8px 10px; }
+      .gv-ico { font-size: 20px; margin-bottom: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- 顶部控制台 -->
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">ζ</div>
+        <div class="brand-txt">
+          <h1>素数合成器 <span class="brand-tag">黎曼波的乐器</span></h1>
+          <div class="brand-sub">零数学门槛 · 亲手拖动音叉珠子，看正弦波把所有素数雕出来</div>
+        </div>
+      </div>
+
+      <nav class="mode-tabs" aria-label="玩法模式">
+        <button class="mtab active" id="tab-tune" onclick="setMode('tune')">🎛 调音闯关</button>
+        <button class="mtab break-tab" id="tab-break" onclick="setMode('break')">⚡ 打破黎曼猜想</button>
+        <button class="mtab sym-tab" id="tab-symphony" onclick="setMode('symphony')">🎹 素数交响乐</button>
+      </nav>
+
+      <div class="meters">
+        <div class="meter">
+          <div class="meter-k">素数还原度</div>
+          <div class="meter-v gold" id="m-fit">72.4%</div>
+        </div>
+        <div class="meter">
+          <div class="meter-k">已雕出素数</div>
+          <div class="meter-v good" id="m-primes">3 / 11</div>
+        </div>
+        <div class="meter">
+          <div class="meter-k" id="m-third-k">当前关卡</div>
+          <div class="meter-v" id="m-third-v">1 / 6</div>
+        </div>
+        <button class="icon-btn help" onclick="openGuide(0)">❓ 30秒秒懂</button>
+        <button class="icon-btn on" id="btn-sound" onclick="toggleSound()">🔊 泛音</button>
+      </div>
+    </header>
+
+    <!-- 双联仪器主舞台 -->
+    <main class="stage">
+      <!-- 左侧面板：黎曼音叉星盘 -->
+      <section class="card" id="card-plane">
+        <div class="card-head">
+          <div class="card-title"><span class="dot" id="dot-plane"></span>左侧音叉星盘 · 把发光珠子拖回黄金线</div>
+          <span class="card-badge" id="plane-badge">黄金中轴线 Re(s)=1/2</span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas class="main-cv" id="cv-plane"></canvas>
+          <!-- 零门槛实时操作指示条（直接告诉你往哪拖！） -->
+          <div class="coach-bar" id="coach-bar">
+            <div class="coach-dirs" id="coach-dirs">
+              <span class="dir-pill warn" id="dir-h">⬅ 往左拉回黄金线</span>
+              <span class="dir-pill" id="dir-v">⬇ 再往下调低一点</span>
+            </div>
+            <div class="signal-box">
+              <span style="font-size:10.5px;opacity:.85;">共振</span>
+              <div class="signal-track"><div class="signal-fill" id="signal-fill"></div></div>
+              <span id="signal-pct" style="font-family:ui-monospace,monospace;color:#fde68a;min-width:34px;text-align:right;">42%</span>
+            </div>
+          </div>
+          <!-- 底部白话原理解说 -->
+          <div class="story-bar" id="plane-story">
+            <span id="plane-story-txt"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右侧面板：素数台阶合成示波器 -->
+      <section class="card" id="card-wave">
+        <div class="card-head">
+          <div class="card-title"><span class="dot blue" id="dot-wave"></span>右侧素数台阶 · 波浪实时雕刻素数</div>
+          <span class="card-badge" id="wave-badge">黎曼显式公式 ψ(x)</span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas class="main-cv" id="cv-wave"></canvas>
+          <div class="story-bar" id="wave-story">
+            <span id="wave-story-txt"></span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 底部实体控制台 -->
+    <footer class="dock">
+      <div class="dock-left" id="dock-controls"></div>
+      <div class="dock-right">
+        <div class="prime-strip" id="prime-strip" title="已精准雕出的素数"></div>
+        <button class="btn primary" onclick="openPosterModal()">🖼 声纹明信片</button>
+      </div>
+    </footer>
+  </div>
+
+  <div class="lock-toast" id="lock-toast">✨ 共振锁定！</div>
+
+  <!-- ================================================================
+       零门槛 3 步故事化互动引导浮层（把百年数学难题翻译成人话！）
+       ================================================================ -->
+  <div class="guide-mask show" id="guide-mask">
+    <div class="guide-card">
+      <div class="guide-top">
+        <div class="guide-steps">
+          <div class="gstep-dot active" id="gdot-0"></div>
+          <div class="gstep-dot" id="gdot-1"></div>
+          <div class="gstep-dot" id="gdot-2"></div>
+        </div>
+        <button class="guide-skip" onclick="closeGuide()">跳过，直接开玩 ✕</button>
+      </div>
+
+      <div class="guide-kicker" id="g-kicker">第 1 / 3 步 · 素数的终极谜题</div>
+      <h2 class="guide-title" id="g-title">为什么价值 100 万美元的「黎曼猜想」其实是一首音乐？</h2>
+      <div class="guide-body" id="g-body"></div>
+      <div class="guide-visual" id="g-visual"></div>
+
+      <div class="guide-foot">
+        <button class="btn" id="g-prev" onclick="stepGuide(-1)">◀ 上一步</button>
+        <div style="display:flex;gap:8px;">
+          <button class="btn emerald" id="g-demo" style="display:none;" onclick="startAutoDemoFromGuide()">▶ 3秒演示给我看</button>
+          <button class="btn gold" id="g-next" onclick="stepGuide(1)">下一步：怎么玩 ▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 声纹明信片弹窗 -->
+  <div class="modal-mask" id="poster-modal" onclick="if(event.target===this) closePosterModal()">
+    <div class="modal-card">
+      <h2 id="poster-title">🎼 你的黎曼素数声纹明信片</h2>
+      <p id="poster-sub">这是由真实黎曼显式公式实时渲染的素数声纹，一键保存专属素数声纹明信片，随时分享数学之美！</p>
+      <img class="poster-preview" id="poster-img" alt="黎曼素数声纹明信片" />
+      <div class="modal-actions">
+        <button class="btn gold" onclick="downloadPoster()">💾 保存高清明信片</button>
+        <button class="btn primary" onclick="copyShareText()">📋 复制 B 站晒图文案</button>
+        <button class="btn" onclick="closePosterModal()">继续演奏</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. 真实数学内核：前 30 个高精度黎曼非平凡零点 + 切比雪夫素数阶梯 ψ(x)
+    // =========================================================================
+    const TRUE_GAMMAS = [
+      14.1347, 21.0220, 25.0109, 30.4249, 32.9351,
+      37.5862, 40.9187, 43.3271, 48.0052, 49.7738,
+      52.9703, 56.4462, 59.3470, 60.8318, 65.1125,
+      67.0798, 69.5464, 72.0672, 75.7047, 77.1448,
+      79.3374, 82.9104, 84.7355, 87.4253, 88.8091,
+      92.4919, 94.6513, 95.8706, 98.8312, 101.3179
+    ];
+
+    const PRIMES_SHOW = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31];
+    const PRIME_POWERS = [
+      [2, Math.log(2)], [3, Math.log(3)], [4, Math.log(2)], [5, Math.log(5)],
+      [7, Math.log(7)], [8, Math.log(2)], [9, Math.log(3)], [11, Math.log(11)],
+      [13, Math.log(13)], [16, Math.log(2)], [17, Math.log(17)], [19, Math.log(19)],
+      [23, Math.log(23)], [25, Math.log(5)], [27, Math.log(3)], [29, Math.log(29)],
+      [31, Math.log(31)]
+    ];
+
+    const X_MIN = 1.4, X_MAX = 33.0, SAMPLE_N = 360;
+    const XS = new Float64Array(SAMPLE_N);
+    const LN_XS = new Float64Array(SAMPLE_N);
+    const TRUE_PSI = new Float64Array(SAMPLE_N);
+    const BASE_PSI = new Float64Array(SAMPLE_N);
+    const SYNTH_PSI = new Float64Array(SAMPLE_N);
+
+    for (let i = 0; i < SAMPLE_N; i++) {
+      const x = X_MIN + (X_MAX - X_MIN) * (i / (SAMPLE_N - 1));
+      XS[i] = x;
+      LN_XS[i] = Math.log(x);
+      let p = 0;
+      for (let j = 0; j < PRIME_POWERS.length; j++) if (x >= PRIME_POWERS[j][0]) p += PRIME_POWERS[j][1];
+      TRUE_PSI[i] = p;
+      BASE_PSI[i] = x - 1.837877066 - 0.5 * Math.log(Math.max(1e-4, 1 - 1 / (x * x)));
+    }
+
+    function evaluateExplicitFormula(zerosList) {
+      let sumSqErr = 0, maxDev = 0, offLineSeverity = 0;
+      for (const z of zerosList) offLineSeverity = Math.max(offLineSeverity, Math.abs(z.sigma - 0.5));
+
+      for (let i = 0; i < SAMPLE_N; i++) {
+        const x = XS[i], lnx = LN_XS[i];
+        let val = BASE_PSI[i];
+        for (let k = 0; k < zerosList.length; k++) {
+          const z = zerosList[k];
+          const s = z.sigma, g = z.gamma;
+          const denom = s * s + g * g;
+          const amp = Math.pow(x, s) / denom;
+          const glnx = g * lnx;
+          const c = Math.cos(glnx), sn = Math.sin(glnx);
+          const w = (Math.abs(s - 0.5) > 0.03) ? 1.0 : (z.weight || 1.0);
+          val -= 2.0 * w * amp * (s * c + g * sn);
+
+          if (Math.abs(s - 0.5) > 0.025) {
+            const dev = Math.abs(s - 0.5);
+            const sHigh = Math.max(s, 1.0 - s);
+            const runaway = Math.pow(x, sHigh + dev * 0.55) / (0.25 + g * g) * (1.0 + dev * 6.5);
+            val -= 2.0 * runaway * (sHigh * c + g * sn);
+          }
+        }
+        SYNTH_PSI[i] = val;
+        const diff = val - TRUE_PSI[i];
+        sumSqErr += diff * diff;
+        if (Math.abs(diff) > maxDev) maxDev = Math.abs(diff);
+      }
+
+      const rmse = Math.sqrt(sumSqErr / SAMPLE_N);
+      const normErr = Math.max(0, (rmse - 0.34) / 1.45);
+      let fitPct = Math.max(0, Math.min(99.2, (1.0 - normErr * 0.62) * 97.6));
+      if (zerosList.length === 0) fitPct = 46.2;
+      if (offLineSeverity > 0.05) fitPct = Math.max(1.2, fitPct - offLineSeverity * 185);
+
+      const litPrimes = [];
+      for (const p of PRIMES_SHOW) {
+        const idxL = Math.max(0, Math.floor(((p - 0.42 - X_MIN) / (X_MAX - X_MIN)) * (SAMPLE_N - 1)));
+        const idxR = Math.min(SAMPLE_N - 1, Math.floor(((p + 0.42 - X_MIN) / (X_MAX - X_MIN)) * (SAMPLE_N - 1)));
+        const jumpSynth = SYNTH_PSI[idxR] - SYNTH_PSI[idxL];
+        const jumpTrue = Math.log(p);
+        const errAtP = Math.abs(SYNTH_PSI[idxR] - TRUE_PSI[idxR]);
+        litPrimes.push(offLineSeverity < 0.08 && jumpSynth > jumpTrue * 0.46 && errAtP < 1.35);
+      }
+      return { rmse, maxDev, fitPct, offLineSeverity, litPrimes };
+    }
+
+    function pseudoZetaMag(sigma, t) {
+      let minD = 99;
+      for (let i = 0; i < 14; i++) {
+        const d = Math.hypot((sigma - 0.5) * 12.5, t - TRUE_GAMMAS[i]);
+        if (d < minD) minD = d;
+      }
+      const ridge = 0.55 + 0.25 * Math.sin(t * 0.65) * Math.cos((sigma - 0.5) * 5.2);
+      const funnel = 1.0 - Math.exp(-minD * minD * 0.48);
+      return Math.max(0.02, ridge * (0.22 + 0.78 * funnel));
+    }
+
+    // =========================================================================
+    // 2. 零门槛「3 步秒懂」引导系统（聚焦黎曼猜想与素数交响乐本体）
+    // =========================================================================
+    const GUIDE_PAGES = [
+      {
+        kicker: "第 1 / 3 步 · 30秒听懂百万美元难题",
+        title: "2、3、5、7、11… 看似随机的素数，其实是宇宙隐藏的一首乐曲",
+        body: `
+          <strong>素数</strong>（只能被 1 和自己整除的数）是所有数字的原子，也是今天银行加密的基石。
+          右侧的<strong>蓝色虚线阶梯</strong>，就是每遇到一个素数就往上跳一格的真实分布。<br/><br/>
+          1859 年，数学家<strong>黎曼</strong>发现了一个惊人秘密：<span class="hl">只要把左侧星盘里的一根根“隐形音叉（零点）”精准放到正中央的黄金中轴线（Re = 1/2）上，它们发出的正弦波叠加在一起，就能把宇宙中所有素数精准“雕”出来！</span>
+        `,
+        visual: [
+          { ico: "🪜", t: "蓝色阶梯 = 真实素数", d: "每遇到 2, 3, 5, 7, 11… 阶梯就跳高一格" },
+          { ico: "🌊", t: "金色波浪 = 音叉合成波", d: "每一颗零点珠子都会贡献一根光滑正弦波" },
+          { ico: "✨", t: "1/2 黄金线 = 黎曼猜想", d: "悬赏 100 万美元：所有非平凡零点都稳稳排在这条线上" }
+        ],
+        nextTxt: "下一步：怎么亲手演奏它？ ▶"
+      },
+      {
+        kicker: "第 2 / 3 步 · 你的核心操作",
+        title: "把左侧的发光珠子拖回黄金中轴线，亲眼看波浪“雕”出素数！",
+        body: `
+          不需要任何高数基础，上手只需要 2 个超直观的动作：<br/>
+          1️⃣ <strong>拖动发光珠子对准呼吸金环</strong>：看着顶部方向提示（左右归位黄金线、上下微调音高），拖进黄金中轴线上的呼吸目标环并松手，珠子就会叮咚共振锁定！<br/>
+          2️⃣ <strong>盯紧右侧素数阶梯的变化</strong>：珠子歪在外面时，红波剧烈暴走；一旦稳稳归位 <strong>Re(s)=0.50</strong>，金色总波浪立刻安静贴紧真实素数台阶，底部对应的素数灯带逐盏点亮！
+        `,
+        visual: [
+          { ico: "👆", t: "一拖即上手", d: "顺着导引虚线，把发光珠子拖进呼吸金环" },
+          { ico: "🎵", t: "实时物理泛音", d: "拖歪时刺耳颤动，归位瞬间化作清澈和弦" },
+          { ico: "💡", t: "点亮素数灯带", d: "音叉越多，2, 3, 5, 7, 11… 雕刻得越锋利" }
+        ],
+        nextTxt: "最后一步：三种必玩模式 ▶"
+      },
+      {
+        kicker: "第 3 / 3 步 · 三大玩法全解锁",
+        title: "调音闯关 × 亲手打破黎曼猜想 × 30 阶素数交响乐！",
+        body: `
+          页面顶部有 3 个随时可以切换的体验模式：<br/>
+          • <strong>🎛 调音闯关（6 关）</strong>：亲手把 1→10 颗真实黎曼零点逐一归位，感受每加一根音叉素数就更清晰一分；<br/>
+          • <strong>⚡ 打破黎曼猜想</strong>：把任意零点拖离 1/2 黄金线，亲眼见证素数误差指数级暴走、加密世界瞬间失控；<br/>
+          • <strong>🎹 素数交响乐</strong>：一键自动演绎 0→30 阶零点合唱，10 秒看一条死板直线凭空雕出全部素数！
+        `,
+        visual: [
+          { ico: "🎛", t: "6 关渐进调音", d: "从第 1 颗零点 γ₁=14.13 一路解锁到高阶密谱" },
+          { ico: "💥", t: "打破猜想实验室", d: "直观感受为什么这根 1/2 中轴线值 100 万美元" },
+          { ico: "🖼", t: "生成声纹明信片", d: "一键保存你的黎曼素数波形纪念卡片" }
+        ],
+        nextTxt: "🎹 进入素数合成器！"
+      }
+    ];
+
+    let guideIdx = 0;
+    let demoAnim = null; // 3秒实机演示动画对象
+
+    function renderGuide() {
+      const p = GUIDE_PAGES[guideIdx];
+      document.getElementById("g-kicker").textContent = p.kicker;
+      document.getElementById("g-title").textContent = p.title;
+      document.getElementById("g-body").innerHTML = p.body;
+      document.getElementById("g-visual").innerHTML = p.visual.map(v => `
+        <div class="gv-box">
+          <div class="gv-ico">${v.ico}</div>
+          <div>
+            <div class="gv-t">${v.t}</div>
+            <div class="gv-d">${v.d}</div>
+          </div>
+        </div>
+      `).join("");
+      for (let i = 0; i < 3; i++) {
+        const d = document.getElementById("gdot-" + i);
+        d.className = "gstep-dot" + (i === guideIdx ? " active" : (i < guideIdx ? " done" : ""));
+      }
+      document.getElementById("g-prev").style.visibility = guideIdx === 0 ? "hidden" : "visible";
+      document.getElementById("g-next").textContent = p.nextTxt;
+      document.getElementById("g-demo").style.display = guideIdx === 2 ? "inline-flex" : "none";
+    }
+
+    function openGuide(idx = 0) {
+      guideIdx = idx;
+      renderGuide();
+      document.getElementById("guide-mask").classList.add("show");
+    }
+    function closeGuide() {
+      document.getElementById("guide-mask").classList.remove("show");
+      ensureAudio();
+    }
+    function stepGuide(delta) {
+      const next = guideIdx + delta;
+      if (next >= GUIDE_PAGES.length) {
+        closeGuide();
+        showToast("👆 试着把左侧的发光珠子拖回正中央的黄金线金环吧！");
+        return;
+      }
+      guideIdx = Math.max(0, next);
+      renderGuide();
+    }
+    function startAutoDemoFromGuide() {
+      closeGuide();
+      setMode("tune");
+      buildLevel(0);
+      startAutoDemoCurrent();
+    }
+
+    // =========================================================================
+    // 3. Web Audio 黎曼泛音物理合成器
+    // =========================================================================
+    let audioCtx = null, soundOn = true;
+    let dragOscA = null, dragOscB = null, dragGain = null;
+    const PENTA_SEMI = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24, 26, 28, 31, 33];
+
+    function gammaToFreq(gamma, idx = 0) {
+      const semi = PENTA_SEMI[idx % PENTA_SEMI.length] + Math.floor(idx / PENTA_SEMI.length) * 12;
+      const base = 261.63 * Math.pow(2, semi / 12);
+      const trueG = TRUE_GAMMAS[idx] || gamma;
+      const detuneRatio = Math.pow(2, Math.max(-0.5, Math.min(0.5, (gamma - trueG) * 0.045)));
+      return Math.max(130, Math.min(1800, base * detuneRatio));
+    }
+
+    function ensureAudio() {
+      if (!soundOn) return null;
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        audioCtx = new AC();
+      }
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playChime(gamma, idx = 0, vol = 0.14, dur = 0.72) {
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const freq = gammaToFreq(gamma, idx);
+      const osc1 = ctx.createOscillator(), osc2 = ctx.createOscillator();
+      const g = ctx.createGain(), g2 = ctx.createGain();
+      osc1.type = "sine"; osc2.type = "triangle";
+      osc1.frequency.setValueAtTime(freq, now);
+      osc2.frequency.setValueAtTime(freq * 2.0, now);
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(vol, now + 0.015);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      g2.gain.value = 0.22;
+      osc1.connect(g); osc2.connect(g2); g2.connect(g); g.connect(ctx.destination);
+      osc1.start(now); osc2.start(now);
+      osc1.stop(now + dur + 0.02); osc2.stop(now + dur + 0.02);
+    }
+
+    function playLockChord(idx) {
+      playChime(TRUE_GAMMAS[idx], idx, 0.16, 1.1);
+      setTimeout(() => playChime(TRUE_GAMMAS[idx], idx + 2, 0.11, 0.9), 70);
+      setTimeout(() => playChime(TRUE_GAMMAS[idx], idx + 4, 0.09, 0.8), 140);
+    }
+
+    function playSonarPing() {
+      const ctx = ensureAudio();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(880, now);
+      o.frequency.exponentialRampToValueAtTime(520, now + 0.45);
+      g.gain.setValueAtTime(0.001, now);
+      g.gain.exponentialRampToValueAtTime(0.10, now + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(now); o.stop(now + 0.58);
+    }
+
+    function updateDragTone(active, sigma, gamma, idx, distToTarget) {
+      const ctx = ensureAudio();
+      if (!ctx || !active) {
+        if (dragGain && audioCtx) dragGain.gain.setTargetAtTime(0.0001, audioCtx.currentTime, 0.05);
+        return;
+      }
+      const now = ctx.currentTime;
+      if (!dragOscA) {
+        dragOscA = ctx.createOscillator(); dragOscB = ctx.createOscillator(); dragGain = ctx.createGain();
+        dragOscA.type = "sine"; dragOscB.type = "triangle"; dragGain.gain.value = 0.0001;
+        dragOscA.connect(dragGain); dragOscB.connect(dragGain); dragGain.connect(ctx.destination);
+        dragOscA.start(); dragOscB.start();
+      }
+      const offLine = Math.abs(sigma - 0.5);
+      const baseF = gammaToFreq(TRUE_GAMMAS[idx] || gamma, idx);
+      const curF = gammaToFreq(gamma, idx);
+      dragOscB.type = offLine > 0.10 ? "sawtooth" : "triangle";
+      dragOscA.frequency.setTargetAtTime(baseF, now, 0.03);
+      const beatOffset = offLine > 0.10 ? (offLine * 95) : Math.min(28, distToTarget * 5.2);
+      dragOscB.frequency.setTargetAtTime(curF + beatOffset, now, 0.03);
+      dragGain.gain.setTargetAtTime(offLine > 0.10 ? 0.075 : 0.055, now, 0.04);
+    }
+
+    function toggleSound() {
+      soundOn = !soundOn;
+      const b = document.getElementById("btn-sound");
+      b.className = "icon-btn" + (soundOn ? " on" : "");
+      b.textContent = soundOn ? "🔊 泛音" : "🔇 静音";
+      if (!soundOn) updateDragTone(false);
+    }
+
+    // =========================================================================
+    // 4. 游戏核心状态 & 3 大模式逻辑
+    // =========================================================================
+    const LEVELS = [
+      { id: 1, name: "第一根音叉 · γ₁ = 14.13", lockedCount: 0, targets: [0], startPos: [[0.80, 19.2]], yRange: [8, 26],
+        story: "<strong>第 1 关：</strong>把这颗歪掉的红色珠子往左拉回正中央的<strong>黄金线 (0.50)</strong>，再往下对准呼吸金环，听第一根黎曼音叉响起！" },
+      { id: 2, name: "双音和弦 · γ₂ = 21.02", lockedCount: 1, targets: [1], startPos: [[0.20, 16.5]], yRange: [10, 30],
+        story: "<strong>第 2 关：</strong>已经有 1 根音叉就位了！现在把第 2 颗珠子拉回黄金线上的金环，看右边的素数阶梯 2, 3, 5 立刻清晰起来！" },
+      { id: 3, name: "三音共振 · 雕出 2, 3, 5, 7", lockedCount: 2, targets: [2], startPos: [[0.82, 29.8]], yRange: [12, 34],
+        story: "<strong>第 3 关：</strong>第 3 根音叉 γ₃ = 25.01 就位后，三根光滑正弦波相互叠加，素数 7 的台阶会被精准“雕”出来！" },
+      { id: 4, name: "双星调律 · γ₄ 与 γ₅", lockedCount: 3, targets: [3, 4], startPos: [[0.22, 27.0], [0.79, 36.8]], yRange: [20, 40],
+        story: "<strong>第 4 关：</strong>这次有 2 颗音叉同时走音！逐一拖回黄金线上的目标金环，看素数 11 与 13 亮起！" },
+      { id: 5, name: "高频密谱 · 追猎 17 与 19", lockedCount: 5, targets: [5, 6], startPos: [[0.78, 34.5], [0.22, 44.5]], yRange: [28, 48],
+        story: "<strong>第 5 关：</strong>越往高频，零点越密集，它们负责雕刻更大素数的细微棱角——归位后看看 17 和 19 的变化！" },
+      { id: 6, name: "终章 · 素数圣殿全频解锁", lockedCount: 7, targets: [7, 8, 9], startPos: [[0.80, 40.5], [0.20, 46.2], [0.76, 52.8]], yRange: [35, 56],
+        story: "<strong>终章第 6 关：</strong>最后 3 根高频音叉！全员归位 1/2 黄金线后，前 10 阶黎曼波将为你精准雕出 2 到 31 的素数阶梯！" },
+    ];
+
+    let mode = "tune", levelIdx = 0;
+    let zeros = [], activeDrag = null, hoverZero = null;
+    let simTime = 0, sonarWave = 0, stringPluck = 0;
+    let particles = [], prevLitPrimes = PRIMES_SHOW.map(() => false);
+    let lastMetrics = null;
+    let symphonyCount = 12, symphonyPlaying = false, symphonyTimer = 0;
+    let planeYMin = 8, planeYMax = 30, lockHoldTime = 0;
+
+    function buildLevel(idx) {
+      levelIdx = Math.max(0, Math.min(LEVELS.length - 1, idx));
+      const lv = LEVELS[levelIdx];
+      planeYMin = lv.yRange[0]; planeYMax = lv.yRange[1];
+      zeros = [];
+      for (let i = 0; i < lv.lockedCount; i++) {
+        zeros.push({ idx: i, sigma: 0.5, gamma: TRUE_GAMMAS[i], locked: true, draggable: false, pulse: 0, weight: 1.0 });
+      }
+      lv.targets.forEach((tIdx, j) => {
+        const [sx, sy] = lv.startPos[j];
+        zeros.push({ idx: tIdx, sigma: sx, gamma: sy, locked: false, draggable: true, pulse: 1.0, weight: 1.0 });
+      });
+      activeDrag = null; lockHoldTime = 0; demoAnim = null; sonarWave = 0;
+      renderDock(); updateStoryTexts();
+    }
+
+    function buildBreakMode() {
+      planeYMin = 10; planeYMax = 55;
+      zeros = [];
+      for (let i = 0; i < 10; i++) {
+        zeros.push({ idx: i, sigma: i === 0 ? 0.80 : 0.5, gamma: TRUE_GAMMAS[i], locked: false, draggable: true, pulse: i === 0 ? 1.0 : 0, weight: 1.0 });
+      }
+      activeDrag = null; demoAnim = null;
+      renderDock(); updateStoryTexts();
+    }
+
+    function buildSymphonyMode(n = symphonyCount) {
+      symphonyCount = Math.max(0, Math.min(TRUE_GAMMAS.length, n));
+      planeYMin = 8;
+      planeYMax = Math.max(36, (TRUE_GAMMAS[Math.max(0, symphonyCount - 1)] || 30) + 6);
+      zeros = [];
+      for (let i = 0; i < symphonyCount; i++) {
+        zeros.push({ idx: i, sigma: 0.5, gamma: TRUE_GAMMAS[i], locked: true, draggable: true, pulse: 0, weight: 1.0 - 0.18 * (i / Math.max(1, symphonyCount)) });
+      }
+      demoAnim = null;
+      renderDock(); updateStoryTexts();
+    }
+
+    function setMode(nextMode) {
+      mode = nextMode;
+      symphonyPlaying = false; demoAnim = null;
+      updateDragTone(false);
+      document.getElementById("lock-toast").classList.remove("show");
+      document.getElementById("tab-tune").classList.toggle("active", mode === "tune");
+      document.getElementById("tab-break").classList.toggle("active", mode === "break");
+      document.getElementById("tab-symphony").classList.toggle("active", mode === "symphony");
+
+      if (mode === "tune") buildLevel(levelIdx);
+      else if (mode === "break") buildBreakMode();
+      else buildSymphonyMode(symphonyCount);
+    }
+
+    function renderDock() {
+      const box = document.getElementById("dock-controls");
+      if (mode === "tune") {
+        const lv = LEVELS[levelIdx];
+        box.innerHTML = `
+          <button class="btn gold" onclick="triggerSonar()">📡 声呐提示</button>
+          <button class="btn emerald" onclick="startAutoDemoCurrent()">▶ 示范校准</button>
+          <button class="btn" onclick="buildLevel(${Math.max(0, levelIdx - 1)})" ${levelIdx === 0 ? "disabled style='opacity:.45'" : ""}>◀ 上关</button>
+          <button class="btn primary" onclick="buildLevel(${(levelIdx + 1) % LEVELS.length})">下关 ▶</button>
+        `;
+        document.getElementById("m-third-k").textContent = "当前关卡";
+        document.getElementById("m-third-v").textContent = `${lv.id} / ${LEVELS.length}`;
+        document.getElementById("m-third-v").className = "meter-v";
+      } else if (mode === "break") {
+        box.innerHTML = `
+          <button class="btn coral" onclick="shatterHypothesis()">💥 一键推翻猜想</button>
+          <button class="btn emerald" onclick="restoreCriticalLine()">✨ 全部归位金线</button>
+          <button class="btn" onclick="setMode('symphony')">🎹 听30阶交响乐</button>
+        `;
+        document.getElementById("m-third-k").textContent = "中轴偏离";
+      } else {
+        box.innerHTML = `
+          <button class="btn gold" id="btn-play-sym" onclick="toggleSymphonyPlay()">${symphonyPlaying ? "⏸ 暂停演绎" : "▶ 自动演绎素数诞生"}</button>
+          <div class="slider-box">
+            <label for="sym-slider">叠加音叉数</label>
+            <input type="range" id="sym-slider" min="0" max="${TRUE_GAMMAS.length}" value="${symphonyCount}" oninput="onSymSlider(this.value)" />
+            <span class="slider-val" id="sym-val">N = ${symphonyCount}</span>
+          </div>
+          <button class="btn" onclick="strumAllZeros()">🎵 拨动金弦</button>
+        `;
+        document.getElementById("m-third-k").textContent = "叠加音叉";
+        document.getElementById("m-third-v").textContent = `N = ${symphonyCount}`;
+        document.getElementById("m-third-v").className = "meter-v gold";
+      }
+    }
+
+    function updateStoryTexts() {
+      const ps = document.getElementById("plane-story");
+      const psTxt = document.getElementById("plane-story-txt");
+      const ws = document.getElementById("wave-story");
+      const wsTxt = document.getElementById("wave-story-txt");
+      const pb = document.getElementById("plane-badge");
+
+      if (mode === "tune") {
+        const lv = LEVELS[levelIdx];
+        const allLocked = zeros.every(z => z.locked);
+        const lockedCnt = zeros.filter(z => z.locked).length;
+        pb.textContent = "黄金中轴线 Re(s)=1/2";
+        ps.className = "story-bar" + (allLocked ? " win" : "");
+        psTxt.innerHTML = allLocked
+          ? `🎉 <strong>第 ${lv.id} 关通关！</strong> 音叉全部稳在 1/2 黄金线上！点下方「下关」叠加更多高阶音叉！`
+          : lv.story;
+        ws.className = "story-bar";
+        wsTxt.innerHTML = lockedCnt === 0
+          ? `<strong>看懂右图：</strong>蓝虚线是真实素数台阶（2, 3, 5, 7…），下面细波是你手里这颗珠子的单根正弦波，粗线是所有波叠加的结果！`
+          : `<strong>原理解密：</strong>你已锁定 ${lockedCnt} 根音叉！每多加一根精准的正弦波，金色总波浪就更像 3D 打印一样贴紧真实素数台阶！`;
+      } else if (mode === "break") {
+        pb.textContent = "临界线破坏实验室 Re(s)=1/2";
+        const off = lastMetrics ? lastMetrics.offLineSeverity : 0.3;
+        const broken = off > 0.08;
+        ps.className = "story-bar" + (broken ? " danger" : " win");
+        psTxt.innerHTML = broken
+          ? `🚨 <strong>这就是 100 万美元悬赏的意义！</strong> 珠子仅离开黄金线 ±${off.toFixed(2)}，它的波浪就随数字变大而指数级失控，数论大厦瞬间崩塌！`
+          : `✅ <strong>全员列队在 0.50 黄金中轴线上！</strong> 试着把任意一颗珠子往左或往右拖歪，亲眼见证“推翻黎曼猜想”的灾难现场！`;
+        ws.className = "story-bar" + (broken ? " danger" : "");
+        wsTxt.innerHTML = broken
+          ? `<strong>秩序崩溃：</strong>红波直接冲穿安全边界，素数阶梯被震成乱码！现在点下方「✨ 全部归位金线」看它瞬间奇迹收束！`
+          : `<strong>秩序稳态：</strong>所有零点在 Re=1/2 上时，素数分布误差永远乖乖关在浅蓝安全带内，现代加密体系稳如磐石！`;
+      } else {
+        pb.textContent = "临界线全频谱 Re(s)=1/2";
+        ps.className = "story-bar";
+        psTxt.innerHTML = `<strong>素数的乐谱：</strong>这里排着前 ${symphonyCount} 颗真实黎曼零点（γ₁=14.13…）。你可以拖动推子，或直接用手指拨动任意珠子听它如何影响素数！`;
+        ws.className = "story-bar";
+        wsTxt.innerHTML = symphonyCount === 0
+          ? `<strong>N = 0 根音叉：</strong>没有任何黎曼零点时，公式只是一条死板斜线，完全看不出素数藏在哪。点下方「▶ 自动演绎」见证奇迹！`
+          : `<strong>N = ${symphonyCount} 根音叉合唱：</strong>${symphonyCount} 根光滑正弦波相互抵消与加强，凭空在 2, 3, 5, 7, 11, 13… 处精准“雕”出了素数台阶！`;
+      }
+    }
+
+    function showToast(msg) {
+      const el = document.getElementById("lock-toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => el.classList.remove("show"), 2000);
+    }
+
+    function triggerSonar() {
+      sonarWave = 1.0;
+      playSonarPing();
+      showToast("📡 声呐高亮：把发光珠子拖进黄金线上的呼吸金环即可锁定！");
+    }
+
+    function startAutoDemoCurrent() {
+      const target = zeros.find(z => !z.locked);
+      if (!target) { buildLevel((levelIdx + 1) % LEVELS.length); return; }
+      demoAnim = { z: target, s0: target.sigma, g0: target.gamma, s1: 0.5, g1: TRUE_GAMMAS[target.idx], t: 0, dur: 1.8 };
+      showToast("✨ 示范将失谐珠子拖回黄金线目标环…");
+    }
+
+    function autoSnapOne() {
+      const target = zeros.find(z => !z.locked);
+      if (!target) { buildLevel((levelIdx + 1) % LEVELS.length); return; }
+      target.sigma = 0.5; target.gamma = TRUE_GAMMAS[target.idx];
+      lockZero(target);
+    }
+
+    function shatterHypothesis() {
+      if (mode !== "break") setMode("break");
+      zeros.forEach((z, i) => { if (i < 3) z.sigma = i % 2 === 0 ? 0.84 : 0.16; });
+      stringPluck = 1.4;
+      updateDragTone(true, 0.84, TRUE_GAMMAS[0], 0, 5.0);
+      setTimeout(() => updateDragTone(false), 550);
+      showToast("💥 零点脱轨！素数波浪指数级暴走失控！");
+    }
+
+    function restoreCriticalLine() {
+      zeros.forEach(z => { z.sigma = 0.5; z.gamma = TRUE_GAMMAS[z.idx]; z.pulse = 1.0; });
+      stringPluck = 1.2;
+      playLockChord(2);
+      showToast("✨ 全员归位 1/2 黄金线！混乱波浪瞬间收束成完美素数阶梯！");
+    }
+
+    function onSymSlider(val) {
+      symphonyPlaying = false;
+      const n = parseInt(val, 10);
+      if (n > symphonyCount && n > 0) playChime(TRUE_GAMMAS[n - 1], n - 1, 0.13, 0.65);
+      symphonyCount = n;
+      buildSymphonyMode(n);
+      const sv = document.getElementById("sym-val");
+      if (sv) sv.textContent = `N = ${n}`;
+    }
+
+    function toggleSymphonyPlay() {
+      symphonyPlaying = !symphonyPlaying;
+      if (symphonyPlaying) {
+        if (symphonyCount >= TRUE_GAMMAS.length) symphonyCount = 0;
+        buildSymphonyMode(symphonyCount);
+        symphonyTimer = 0;
+      }
+      renderDock();
+    }
+
+    function strumAllZeros() {
+      stringPluck = 1.3;
+      const cnt = Math.min(zeros.length, 10);
+      for (let i = 0; i < cnt; i++) {
+        setTimeout(() => {
+          if (zeros[i]) zeros[i].pulse = 1.0;
+          playChime(TRUE_GAMMAS[i], i, 0.11, 0.6);
+        }, i * 75);
+      }
+    }
+
+    function lockZero(z) {
+      z.sigma = 0.5; z.gamma = TRUE_GAMMAS[z.idx];
+      z.locked = true; z.draggable = false; z.pulse = 1.4;
+      stringPluck = 1.25;
+      playLockChord(z.idx);
+      showToast(`✨ 共振锁定！音叉 ρ${z.idx + 1} (γ = ${z.gamma.toFixed(2)}) 稳稳归位 1/2 黄金线！`);
+      updateStoryTexts();
+
+      if (mode === "tune" && zeros.every(it => it.locked)) {
+        setTimeout(() => {
+          if (levelIdx < LEVELS.length - 1) {
+            showToast(`🏆 第 ${levelIdx + 1} 关通关！进入下一阶黎曼音叉…`);
+            setTimeout(() => { if (mode === "tune" && zeros.every(it => it.locked)) buildLevel(levelIdx + 1); }, 1500);
+          } else {
+            showToast("👑 全部 6 关调音通关！点顶部「🎹 素数交响乐」欣赏 30 阶奇迹！");
+          }
+        }, 900);
+      }
+    }
+
+    // 素数灯带初始化
+    const primeStripEl = document.getElementById("prime-strip");
+    const primeChips = PRIMES_SHOW.map(p => {
+      const d = document.createElement("div");
+      d.className = "p-chip"; d.textContent = p;
+      primeStripEl.appendChild(d);
+      return d;
+    });
+
+    // =========================================================================
+    // 5. 高清双 Canvas 渲染（增加直觉白话坐标标注！）
+    // =========================================================================
+    const cvPlane = document.getElementById("cv-plane"), ctxP = cvPlane.getContext("2d");
+    const cvWave = document.getElementById("cv-wave"), ctxW = cvWave.getContext("2d");
+    let heatmapCanvas = null, heatKey = "";
+
+    function ensureHeatmap(w, h) {
+      const key = `${w}x${h}_${planeYMin.toFixed(1)}_${planeYMax.toFixed(1)}`;
+      if (heatmapCanvas && heatKey === key) return heatmapCanvas;
+      heatKey = key;
+      const cw = Math.max(60, Math.floor(w / 4)), ch = Math.max(60, Math.floor(h / 4));
+      const c = document.createElement("canvas"); c.width = cw; c.height = ch;
+      const g = c.getContext("2d"), img = g.createImageData(cw, ch), d = img.data;
+      for (let py = 0; py < ch; py++) {
+        const t = planeYMax - (py / (ch - 1)) * (planeYMax - planeYMin);
+        for (let px = 0; px < cw; px++) {
+          const sigma = px / (cw - 1);
+          const mag = pseudoZetaMag(sigma, t);
+          const centerBand = Math.exp(-Math.pow((sigma - 0.5) * 4.5, 2));
+          const idx = (py * cw + px) * 4;
+          d[idx] = Math.min(255, Math.floor(18 + centerBand * 26 + (1 - mag) * 48));
+          d[idx + 1] = Math.min(255, Math.floor(29 + centerBand * 34 + (1 - mag) * 44));
+          d[idx + 2] = Math.min(255, Math.floor(58 + mag * 46 + centerBand * 24));
+          d[idx + 3] = 255;
+        }
+      }
+      g.putImageData(img, 0, 0);
+      heatmapCanvas = c;
+      return c;
+    }
+
+    function resizeCanvases() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      [cvPlane, cvWave].forEach(cv => {
+        const rect = cv.parentElement.getBoundingClientRect();
+        const w = Math.max(100, Math.floor(rect.width * dpr));
+        const h = Math.max(100, Math.floor(rect.height * dpr));
+        if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+      });
+    }
+    window.addEventListener("resize", resizeCanvases);
+
+    function planeBounds() {
+      const w = cvPlane.width, h = cvPlane.height;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const isNarrow = window.innerWidth <= 860;
+      return {
+        x0: 44 * dpr,
+        x1: w - (isNarrow ? 30 : 26) * dpr,
+        y0: 54 * dpr,
+        y1: h - (isNarrow ? 76 : 86) * dpr,
+        dpr
+      };
+    }
+    function s2px(sigma, gamma) {
+      const b = planeBounds();
+      return [
+        b.x0 + sigma * (b.x1 - b.x0),
+        b.y1 - ((gamma - planeYMin) / (planeYMax - planeYMin)) * (b.y1 - b.y0)
+      ];
+    }
+    function px2s(cx, cy) {
+      const b = planeBounds();
+      return [
+        Math.max(0.04, Math.min(0.96, (cx - b.x0) / (b.x1 - b.x0))),
+        Math.max(planeYMin + 0.5, Math.min(planeYMax - 0.5, planeYMin + ((b.y1 - cy) / (b.y1 - b.y0)) * (planeYMax - planeYMin)))
+      ];
+    }
+
+    function drawPlane(metrics) {
+      const w = cvPlane.width, h = cvPlane.height;
+      const b = planeBounds(), dpr = b.dpr;
+      const pw = b.x1 - b.x0, ph = b.y1 - b.y0;
+
+      ctxP.clearRect(0, 0, w, h);
+      ctxP.fillStyle = "#101a30";
+      ctxP.fillRect(0, 0, w, h);
+
+      // 1. 黎曼星图热力场
+      ctxP.drawImage(ensureHeatmap(Math.floor(pw), Math.floor(ph)), b.x0, b.y0, pw, ph);
+
+      // 2. 经纬网格与坐标刻度
+      ctxP.strokeStyle = "rgba(255, 245, 224, 0.09)";
+      ctxP.lineWidth = 1 * dpr;
+      for (let s = 0; s <= 1.001; s += 0.25) {
+        const x = b.x0 + s * pw;
+        ctxP.beginPath(); ctxP.moveTo(x, b.y0); ctxP.lineTo(x, b.y1); ctxP.stroke();
+        const isGoldLbl = s === 0.5;
+        ctxP.fillStyle = isGoldLbl ? "#fcd34d" : "rgba(226, 232, 240, 0.62)";
+        ctxP.font = `700 ${10 * dpr}px -apple-system, ui-monospace, sans-serif`;
+        ctxP.textAlign = "center";
+        const lbl = isGoldLbl ? "0.50 黄金线" : s.toFixed(2);
+        ctxP.fillText(lbl, x, b.y1 + 14 * dpr);
+      }
+
+      const stepG = (planeYMax - planeYMin) > 40 ? 10 : 5;
+      const firstG = Math.ceil(planeYMin / stepG) * stepG;
+      ctxP.textAlign = "right";
+      for (let g = firstG; g <= planeYMax; g += stepG) {
+        const [, y] = s2px(0, g);
+        ctxP.strokeStyle = "rgba(255, 245, 224, 0.08)";
+        ctxP.beginPath(); ctxP.moveTo(b.x0, y); ctxP.lineTo(b.x1, y); ctxP.stroke();
+        ctxP.fillStyle = "rgba(226, 232, 240, 0.62)";
+        ctxP.fillText(`${g}`, b.x0 - 6 * dpr, y + 3.5 * dpr);
+      }
+      ctxP.fillStyle = "rgba(253, 230, 138, 0.72)";
+      ctxP.font = `700 ${9.5 * dpr}px -apple-system, sans-serif`;
+      ctxP.textAlign = "left";
+      ctxP.fillText("⬆ 频率 γ", 8 * dpr, b.y0 + 10 * dpr);
+
+      // 3. 黄金临界琴弦 Re(s) = 1/2
+      const midX = b.x0 + 0.5 * pw;
+      const chaos = metrics.offLineSeverity > 0.08;
+      ctxP.save();
+      ctxP.strokeStyle = chaos ? "rgba(248, 113, 113, 0.85)" : "rgba(252, 211, 77, 0.94)";
+      ctxP.lineWidth = 2.6 * dpr;
+      ctxP.shadowColor = chaos ? "#ef4444" : "#f59e0b";
+      ctxP.shadowBlur = 14 * dpr;
+      ctxP.beginPath();
+      for (let i = 0; i <= 40; i++) {
+        const f = i / 40, y = b.y0 + f * ph;
+        const vib = Math.sin(f * Math.PI) * Math.sin(simTime * 34 + f * 6) * stringPluck * 7 * dpr;
+        if (i === 0) ctxP.moveTo(midX + vib, y); else ctxP.lineTo(midX + vib, y);
+      }
+      ctxP.stroke();
+      ctxP.restore();
+
+      // 4. 调音闯关模式：在黄金线上绘制呼吸目标金环与导引虚线
+      if (mode === "tune") {
+        zeros.forEach(z => {
+          if (z.locked) return;
+          const [tx, ty] = s2px(0.5, TRUE_GAMMAS[z.idx]);
+          const [zx, zy] = s2px(z.sigma, z.gamma);
+          const breath = 0.5 + 0.5 * Math.sin(simTime * 3.8 + z.idx);
+          const boost = 1 + sonarWave * 0.65;
+
+          // 优雅导引虚线：从当前发光珠子指向黄金目标环
+          ctxP.save();
+          ctxP.setLineDash([5 * dpr, 5 * dpr]);
+          ctxP.lineDashOffset = -simTime * 18 * dpr;
+          ctxP.strokeStyle = `rgba(252, 211, 77, ${0.42 + sonarWave * 0.45})`;
+          ctxP.lineWidth = 1.6 * dpr;
+          ctxP.beginPath(); ctxP.moveTo(zx, zy); ctxP.lineTo(tx, ty); ctxP.stroke();
+          ctxP.restore();
+
+          // 呼吸金环目标位
+          ctxP.save();
+          const outerR = (15 + breath * 5) * boost * dpr;
+          ctxP.strokeStyle = `rgba(253, 224, 71, ${0.55 + breath * 0.4})`;
+          ctxP.lineWidth = (2.1 + sonarWave * 1.4) * dpr;
+          ctxP.shadowColor = "#fbbf24";
+          ctxP.shadowBlur = (10 + sonarWave * 14) * dpr;
+          ctxP.beginPath(); ctxP.arc(tx, ty, outerR, 0, Math.PI * 2); ctxP.stroke();
+
+          ctxP.fillStyle = `rgba(251, 191, 36, ${0.14 + breath * 0.14})`;
+          ctxP.beginPath(); ctxP.arc(tx, ty, outerR, 0, Math.PI * 2); ctxP.fill();
+
+          ctxP.fillStyle = "#fde68a";
+          ctxP.font = `700 ${9.5 * dpr}px ui-monospace, -apple-system, sans-serif`;
+          ctxP.textAlign = "right";
+          ctxP.fillText(`🎯 拖到这里 (γ=${TRUE_GAMMAS[z.idx].toFixed(1)})`, tx - outerR - 6 * dpr, ty + 3.5 * dpr);
+          ctxP.restore();
+        });
+      }
+
+      // 5. 绘制零点音叉珠子
+      zeros.forEach(z => {
+        const [zx, zy] = s2px(z.sigma, z.gamma);
+        const off = Math.abs(z.sigma - 0.5);
+        const isOff = off > 0.05;
+        const isActive = activeDrag === z || hoverZero === z;
+
+        if (isOff) {
+          ctxP.save();
+          ctxP.setLineDash([4 * dpr, 4 * dpr]);
+          ctxP.strokeStyle = "rgba(248, 113, 113, 0.82)";
+          ctxP.lineWidth = 1.8 * dpr;
+          ctxP.beginPath(); ctxP.moveTo(midX, zy); ctxP.lineTo(zx, zy); ctxP.stroke();
+          ctxP.restore();
+        }
+        if (z.pulse > 0.02) {
+          ctxP.save();
+          ctxP.strokeStyle = isOff ? `rgba(248, 113, 113, ${z.pulse * 0.7})` : `rgba(252, 211, 77, ${z.pulse * 0.8})`;
+          ctxP.lineWidth = 2 * dpr;
+          ctxP.beginPath(); ctxP.arc(zx, zy, (12 + (1.4 - z.pulse) * 24) * dpr, 0, Math.PI * 2); ctxP.stroke();
+          ctxP.restore();
+        }
+
+        const rad = (isActive ? 11.5 : (z.locked ? 7.5 : 10.5)) * dpr;
+        ctxP.save();
+        ctxP.shadowColor = isOff ? "#ef4444" : (z.locked ? "#fbbf24" : "#38bdf8");
+        ctxP.shadowBlur = (isActive ? 20 : 12) * dpr;
+        const grad = ctxP.createRadialGradient(zx - rad * 0.25, zy - rad * 0.25, 1, zx, zy, rad);
+        if (z.locked) {
+          grad.addColorStop(0, "#ffffff"); grad.addColorStop(0.5, "#fde047"); grad.addColorStop(1, "#d97706");
+        } else if (isOff) {
+          grad.addColorStop(0, "#fff1f2"); grad.addColorStop(0.55, "#f97316"); grad.addColorStop(1, "#dc2626");
+        } else {
+          grad.addColorStop(0, "#ffffff"); grad.addColorStop(0.55, "#fde047"); grad.addColorStop(1, "#f59e0b");
+        }
+        ctxP.fillStyle = grad;
+        ctxP.beginPath(); ctxP.arc(zx, zy, rad, 0, Math.PI * 2); ctxP.fill();
+        ctxP.strokeStyle = "#ffffff"; ctxP.lineWidth = 1.6 * dpr; ctxP.stroke();
+        ctxP.restore();
+
+        if (zeros.length <= 14 || isActive || z.idx < 5 || z.idx === zeros.length - 1) {
+          ctxP.fillStyle = z.locked ? "#fef3c7" : "#fecaca";
+          ctxP.font = `800 ${9.5 * dpr}px ui-monospace, monospace`;
+          ctxP.textAlign = "left";
+          const tag = z.locked ? `ρ${z.idx + 1} (${z.gamma.toFixed(1)})` : `拖我 ρ${z.idx + 1}`;
+          ctxP.fillText(tag, zx + rad + 5 * dpr, zy + 3.5 * dpr);
+        }
+      });
+    }
+
+    function drawWave(metrics) {
+      const w = cvWave.width, h = cvWave.height;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const x0 = 42 * dpr, x1 = w - 18 * dpr;
+      const y0 = 24 * dpr, y1 = h - 72 * dpr;
+      const pw = x1 - x0, ph = y1 - y0;
+      const yMax = 38.0, yMin = -2.0;
+
+      const gx = x => x0 + ((x - X_MIN) / (X_MAX - X_MIN)) * pw;
+      const gy = y => y1 - ((Math.max(yMin - 6, Math.min(yMax + 6, y)) - yMin) / (yMax - yMin)) * ph;
+
+      ctxW.clearRect(0, 0, w, h);
+      const bg = ctxW.createLinearGradient(0, 0, 0, h);
+      bg.addColorStop(0, "#fffdf8"); bg.addColorStop(1, "#f7f1e5");
+      ctxW.fillStyle = bg; ctxW.fillRect(0, 0, w, h);
+
+      const chaos = metrics.offLineSeverity > 0.08;
+
+      ctxW.strokeStyle = "rgba(24, 35, 56, 0.06)";
+      ctxW.lineWidth = 1 * dpr;
+      for (let v = 0; v <= 35; v += 5) {
+        const yy = gy(v);
+        ctxW.beginPath(); ctxW.moveTo(x0, yy); ctxW.lineTo(x1, yy); ctxW.stroke();
+        ctxW.fillStyle = "rgba(92, 102, 122, 0.68)";
+        ctxW.font = `700 ${9.5 * dpr}px ui-monospace, monospace`;
+        ctxW.textAlign = "right";
+        ctxW.fillText(String(v), x0 - 6 * dpr, yy + 3.5 * dpr);
+      }
+
+      // 素数发光立柱
+      PRIMES_SHOW.forEach((p, idx) => {
+        const px = gx(p), lit = metrics.litPrimes[idx];
+        ctxW.save();
+        if (lit) {
+          const grd = ctxW.createLinearGradient(px, y0, px, y1);
+          grd.addColorStop(0, "rgba(245, 176, 56, 0.02)");
+          grd.addColorStop(0.5, "rgba(245, 176, 56, 0.16)");
+          grd.addColorStop(1, "rgba(217, 138, 28, 0.28)");
+          ctxW.fillStyle = grd; ctxW.fillRect(px - 5 * dpr, y0, 10 * dpr, ph);
+        }
+        ctxW.strokeStyle = chaos ? "rgba(224, 82, 54, 0.18)" : (lit ? "rgba(217, 138, 28, 0.45)" : "rgba(24, 35, 56, 0.08)");
+        ctxW.lineWidth = (lit ? 1.5 : 1) * dpr;
+        ctxW.beginPath(); ctxW.moveTo(px, y0); ctxW.lineTo(px, y1); ctxW.stroke();
+
+        ctxW.fillStyle = chaos ? "#dc2626" : (lit ? "#b76b08" : "#8c96a8");
+        ctxW.font = `800 ${(lit ? 11.5 : 10) * dpr}px ui-monospace, monospace`;
+        ctxW.textAlign = "center";
+        ctxW.fillText(String(p), px, y1 + 14 * dpr);
+        ctxW.restore();
+      });
+
+      // 安全包络带
+      ctxW.save();
+      ctxW.fillStyle = chaos ? "rgba(224, 82, 54, 0.09)" : "rgba(40, 75, 158, 0.055)";
+      ctxW.beginPath();
+      for (let i = 0; i < SAMPLE_N; i++) {
+        const px = gx(XS[i]), py = gy(XS[i] + 0.65 * Math.sqrt(XS[i]));
+        if (i === 0) ctxW.moveTo(px, py); else ctxW.lineTo(px, py);
+      }
+      for (let i = SAMPLE_N - 1; i >= 0; i--) ctxW.lineTo(gx(XS[i]), gy(XS[i] - 0.65 * Math.sqrt(XS[i])));
+      ctxW.closePath(); ctxW.fill(); ctxW.restore();
+
+      // 真实素数阶梯
+      ctxW.save();
+      ctxW.strokeStyle = "#1e3a8a"; ctxW.lineWidth = 2.2 * dpr;
+      ctxW.setLineDash([5 * dpr, 3.5 * dpr]);
+      ctxW.beginPath();
+      for (let i = 0; i < SAMPLE_N; i++) {
+        const px = gx(XS[i]), py = gy(TRUE_PSI[i]);
+        if (i === 0) ctxW.moveTo(px, py); else ctxW.lineTo(px, py);
+      }
+      ctxW.stroke(); ctxW.restore();
+
+      // 合成主波
+      ctxW.save();
+      const areaGrad = ctxW.createLinearGradient(0, y0, 0, y1);
+      areaGrad.addColorStop(0, chaos ? "rgba(224, 82, 54, 0.24)" : "rgba(217, 138, 28, 0.24)");
+      areaGrad.addColorStop(1, chaos ? "rgba(224, 82, 54, 0.02)" : "rgba(217, 138, 28, 0.02)");
+      ctxW.fillStyle = areaGrad;
+      ctxW.beginPath(); ctxW.moveTo(gx(XS[0]), y1);
+      for (let i = 0; i < SAMPLE_N; i++) ctxW.lineTo(gx(XS[i]), gy(SYNTH_PSI[i]));
+      ctxW.lineTo(gx(XS[SAMPLE_N - 1]), y1); ctxW.closePath(); ctxW.fill();
+
+      ctxW.strokeStyle = chaos ? "#dc2626" : "#d98a1c";
+      ctxW.lineWidth = 3.2 * dpr;
+      ctxW.shadowColor = chaos ? "rgba(220, 38, 38, 0.45)" : "rgba(217, 138, 28, 0.48)";
+      ctxW.shadowBlur = 10 * dpr;
+      ctxW.beginPath();
+      for (let i = 0; i < SAMPLE_N; i++) {
+        const px = gx(XS[i]), py = gy(SYNTH_PSI[i]);
+        if (i === 0) ctxW.moveTo(px, py); else ctxW.lineTo(px, py);
+      }
+      ctxW.stroke(); ctxW.restore();
+
+      // 当前单根音叉谐波分量
+      const focusZ = activeDrag || zeros.find(z => !z.locked) || (zeros.length > 0 ? zeros[zeros.length - 1] : null);
+      if (focusZ) {
+        ctxW.save();
+        const baseLineY = gy(3.2);
+        ctxW.strokeStyle = Math.abs(focusZ.sigma - 0.5) > 0.05 ? "rgba(220, 38, 38, 0.52)" : "rgba(40, 75, 158, 0.42)";
+        ctxW.lineWidth = 1.8 * dpr;
+        ctxW.beginPath();
+        for (let i = 0; i < SAMPLE_N; i++) {
+          const x = XS[i], lnx = LN_XS[i], s = focusZ.sigma, g = focusZ.gamma;
+          const dev = Math.abs(s - 0.5);
+          const scaleAmp = Math.pow(x, Math.max(s, 0.5 + dev * 1.15)) / Math.sqrt(s * s + g * g) * 2.8;
+          const waveY = baseLineY - scaleAmp * Math.sin(g * lnx) * (ph / 38.0);
+          if (i === 0) ctxW.moveTo(gx(x), waveY); else ctxW.lineTo(gx(x), waveY);
+        }
+        ctxW.stroke(); ctxW.restore();
+      }
+
+      // 点亮素数星芒
+      PRIMES_SHOW.forEach((p, idx) => {
+        if (!metrics.litPrimes[idx]) return;
+        const iSample = Math.min(SAMPLE_N - 1, Math.floor(((p - X_MIN) / (X_MAX - X_MIN)) * (SAMPLE_N - 1)));
+        const px = gx(p), py = gy(TRUE_PSI[iSample]);
+        ctxW.save();
+        ctxW.fillStyle = "#f59e0b"; ctxW.shadowColor = "#f59e0b"; ctxW.shadowBlur = 10 * dpr;
+        ctxW.beginPath(); ctxW.arc(px, py, 4.2 * dpr, 0, Math.PI * 2); ctxW.fill();
+        ctxW.fillStyle = "#fff"; ctxW.beginPath(); ctxW.arc(px, py, 1.8 * dpr, 0, Math.PI * 2); ctxW.fill();
+        ctxW.restore();
+      });
+
+      // 礼花粒子
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const pt = particles[i];
+        pt.x += pt.vx; pt.y += pt.vy; pt.vy += 0.12 * dpr; pt.life -= 0.028;
+        if (pt.life <= 0) { particles.splice(i, 1); continue; }
+        ctxW.fillStyle = `rgba(217, 138, 28, ${pt.life})`;
+        ctxW.beginPath(); ctxW.arc(pt.x, pt.y, pt.r * pt.life, 0, Math.PI * 2); ctxW.fill();
+      }
+
+      // 左上白话图例
+      ctxW.save();
+      ctxW.font = `700 ${11 * dpr}px -apple-system, sans-serif`;
+      ctxW.textAlign = "left";
+      ctxW.fillStyle = "#1e3a8a";
+      ctxW.fillText("--- 真实素数阶梯 (目标)", x0 + 10 * dpr, y0 + 16 * dpr);
+      ctxW.fillStyle = chaos ? "#dc2626" : "#b76b08";
+      ctxW.fillText("━━ 你的音叉总合成波", x0 + 10 * dpr, y0 + 34 * dpr);
+      if (focusZ) {
+        ctxW.fillStyle = chaos ? "rgba(220,38,38,0.82)" : "rgba(40,75,158,0.78)";
+        ctxW.fillText(`〰 音叉${focusZ.idx + 1} 的单根正弦波`, x0 + 10 * dpr, y0 + 52 * dpr);
+      }
+      ctxW.restore();
+    }
+
+    function spawnPrimeSpark(primeVal) {
+      const w = cvWave.width, h = cvWave.height, dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const x0 = 42 * dpr, x1 = w - 18 * dpr, y0 = 24 * dpr, y1 = h - 72 * dpr;
+      const px = x0 + ((primeVal - X_MIN) / (X_MAX - X_MIN)) * (x1 - x0);
+      const iSample = Math.min(SAMPLE_N - 1, Math.floor(((primeVal - X_MIN) / (X_MAX - X_MIN)) * (SAMPLE_N - 1)));
+      const py = y1 - ((TRUE_PSI[iSample] + 2) / 40) * (y1 - y0);
+      for (let k = 0; k < 10; k++) {
+        const a = Math.random() * Math.PI * 2, sp = (1.2 + Math.random() * 2.8) * dpr;
+        particles.push({ x: px, y: py, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 1.5 * dpr, r: (2.5 + Math.random() * 2.5) * dpr, life: 1.0 });
+      }
+    }
+
+    // =========================================================================
+    // 6. 拖拽手势交互
+    // =========================================================================
+    function getPointerCanvasPos(e) {
+      const rect = cvPlane.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return [(clientX - rect.left) * dpr, (clientY - rect.top) * dpr];
+    }
+
+    function findNearestZero(cx, cy) {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      let best = null, bestD = 34 * dpr;
+      for (let i = zeros.length - 1; i >= 0; i--) {
+        const z = zeros[i];
+        if (!z.draggable) continue;
+        const [zx, zy] = s2px(z.sigma, z.gamma);
+        const d = Math.hypot(cx - zx, cy - zy);
+        if (d < bestD) { bestD = d; best = z; }
+      }
+      return best;
+    }
+
+    function onPlaneDown(e) {
+      e.preventDefault(); ensureAudio(); demoAnim = null;
+      const [cx, cy] = getPointerCanvasPos(e);
+      const z = findNearestZero(cx, cy);
+      if (z) {
+        activeDrag = z; lockHoldTime = 0;
+        playChime(z.gamma, z.idx, 0.09, 0.35);
+      } else if (mode === "tune") {
+        const target = zeros.find(it => !it.locked);
+        if (target) {
+          const [sigma, gamma] = px2s(cx, cy);
+          target.sigma = sigma; target.gamma = gamma; activeDrag = target;
+        }
+      }
+    }
+
+    function onPlaneMove(e) {
+      const [cx, cy] = getPointerCanvasPos(e);
+      if (!activeDrag) { hoverZero = findNearestZero(cx, cy); return; }
+      e.preventDefault();
+      const [sigma, gamma] = px2s(cx, cy);
+      activeDrag.sigma = (mode !== "break" && Math.abs(sigma - 0.5) < 0.025) ? 0.5 : sigma;
+      activeDrag.gamma = gamma;
+      const dist = Math.hypot((activeDrag.sigma - 0.5) * 14, activeDrag.gamma - TRUE_GAMMAS[activeDrag.idx]);
+      updateDragTone(true, activeDrag.sigma, activeDrag.gamma, activeDrag.idx, dist);
+    }
+
+    function onPlaneUp() {
+      if (!activeDrag) return;
+      const z = activeDrag; activeDrag = null; updateDragTone(false);
+      if (mode === "tune" && !z.locked) {
+        const dSigma = Math.abs(z.sigma - 0.5), dGamma = Math.abs(z.gamma - TRUE_GAMMAS[z.idx]);
+        if (dSigma < 0.06 && dGamma < 0.72) lockZero(z);
+        else if (dSigma >= 0.06) showToast("↔ 再往正中央的黄金中轴线 (0.50) 拖近一点！");
+        else showToast(z.gamma < TRUE_GAMMAS[z.idx] ? "⬆ 频率还低了点，往上拖进金环！" : "⬇ 频率还高了点，往下拖进金环！");
+      }
+    }
+
+    cvPlane.addEventListener("mousedown", onPlaneDown);
+    window.addEventListener("mousemove", onPlaneMove);
+    window.addEventListener("mouseup", onPlaneUp);
+    cvPlane.addEventListener("touchstart", onPlaneDown, { passive: false });
+    window.addEventListener("touchmove", onPlaneMove, { passive: false });
+    window.addEventListener("touchend", onPlaneUp);
+
+    // =========================================================================
+    // 7. 声纹明信片生成器
+    // =========================================================================
+    function generatePosterDataURL() {
+      const pw = 1080, ph = 640;
+      const c = document.createElement("canvas"); c.width = pw; c.height = ph;
+      const g = c.getContext("2d");
+      const bg = g.createLinearGradient(0, 0, pw, ph);
+      bg.addColorStop(0, "#fffdf8"); bg.addColorStop(1, "#f2eadb");
+      g.fillStyle = bg; g.fillRect(0, 0, pw, ph);
+
+      const chaos = lastMetrics && lastMetrics.offLineSeverity > 0.08;
+      g.fillStyle = chaos ? "#dc2626" : "#1b2d56";
+      g.fillRect(0, 0, pw, 12);
+
+      g.save();
+      g.strokeStyle = "rgba(24,35,56,0.14)"; g.lineWidth = 2;
+      g.drawImage(cvPlane, 36, 118, 380, 380); g.strokeRect(36, 118, 380, 380);
+      g.drawImage(cvWave, 434, 118, 610, 380); g.strokeRect(434, 118, 610, 380);
+      g.restore();
+
+      g.fillStyle = "#182338"; g.font = "800 34px -apple-system, PingFang SC, sans-serif";
+      g.fillText(chaos ? "⚡ 我亲手推翻了黎曼猜想！" : "🎼 我的黎曼素数声纹明信片", 36, 62);
+      g.fillStyle = chaos ? "#c9371d" : "#b76b08"; g.font = "700 18px -apple-system, PingFang SC, sans-serif";
+      const litCnt = lastMetrics ? lastMetrics.litPrimes.filter(Boolean).length : 0;
+      const fitTxt = lastMetrics ? lastMetrics.fitPct.toFixed(1) : "0.0";
+      g.fillText(
+        chaos
+          ? `音叉偏离 1/2 黄金线 ±${lastMetrics.offLineSeverity.toFixed(2)} · 素数分布误差暴走失控！`
+          : `已用 ${zeros.length} 根黎曼音叉雕出 ${litCnt}/11 个素数台阶 · 显式公式实时还原度 ${fitTxt}%`,
+        36, 94
+      );
+      g.fillStyle = "#182338"; g.font = "800 22px -apple-system, PingFang SC, sans-serif";
+      g.fillText("《素数合成器 · 黎曼波的乐器》 · 零门槛互动科学玩具", 36, 554);
+      g.fillStyle = "#5c667a"; g.font = "600 16px ui-monospace, monospace";
+      g.fillText("ψ(x) = x − ln(2π) − ½ln(1−x⁻²) − Σ 2·Re(x^ρ / ρ)    |    AI 交互数学声学实验台", 36, 588);
+
+      g.fillStyle = chaos ? "#dc2626" : "#d98a1c";
+      g.beginPath(); g.roundRect(846, 524, 198, 76, 16); g.fill();
+      g.fillStyle = "#fffdf8"; g.textAlign = "center";
+      g.font = "700 14px -apple-system, sans-serif";
+      g.fillText(chaos ? "素数宇宙状态" : "素数还原度", 945, 550);
+      g.font = "800 30px ui-monospace, monospace";
+      g.fillText(chaos ? "已崩溃" : `${fitTxt}%`, 945, 586);
+      return c.toDataURL("image/png");
+    }
+
+    function openPosterModal() {
+      document.getElementById("poster-img").src = generatePosterDataURL();
+      const chaos = lastMetrics && lastMetrics.offLineSeverity > 0.08;
+      document.getElementById("poster-title").textContent = chaos ? "⚡ 黎曼猜想崩塌报告" : "🎼 你的黎曼素数声纹明信片";
+      document.getElementById("poster-modal").classList.add("show");
+    }
+    function closePosterModal() { document.getElementById("poster-modal").classList.remove("show"); }
+    function downloadPoster() {
+      const a = document.createElement("a"); a.href = document.getElementById("poster-img").src;
+      a.download = "riemann-prime-synth-card.png"; a.click();
+      showToast("💾 声纹明信片已保存！");
+    }
+    function copyShareText() {
+      const chaos = lastMetrics && lastMetrics.offLineSeverity > 0.08;
+      const litCnt = lastMetrics ? lastMetrics.litPrimes.filter(Boolean).length : 0;
+      const fitTxt = lastMetrics ? lastMetrics.fitPct.toFixed(1) : "0.0";
+      const txt = chaos
+        ? `我在《素数合成器》里把黎曼音叉拖偏了 1/2 黄金线（偏差 ±${lastMetrics.offLineSeverity.toFixed(2)}），右侧素数阶梯瞬间炸成乱码！一秒看懂为什么黎曼猜想值 100 万美元！`
+        : `我在《素数合成器》里亲手调准了 ${zeros.length} 根黎曼音叉，还原度 ${fitTxt}%，一口气雕出 ${litCnt}/11 个素数台阶！原来素数真的是一首波浪交响乐！`;
+      navigator.clipboard?.writeText(txt).then(() => showToast("📋 晒图文案已复制！")).catch(() => showToast("📋 请截图分享！"));
+    }
+
+    // =========================================================================
+    // 8. 主循环 & 实时调音教练更新
+    // =========================================================================
+    window._autoLoop = true;
+
+    function updateCoachBar(metrics) {
+      const dh = document.getElementById("dir-h");
+      const dv = document.getElementById("dir-v");
+      const sf = document.getElementById("signal-fill");
+      const sp = document.getElementById("signal-pct");
+      const chaos = metrics.offLineSeverity > 0.08;
+
+      if (mode === "tune") {
+        const z = activeDrag || zeros.find(it => !it.locked);
+        if (!z) {
+          dh.className = "dir-pill ok"; dh.textContent = "✅ 本关全员归位";
+          dv.className = "dir-pill ok"; dv.textContent = "🎉 点击下关继续";
+          sf.style.width = "100%"; sp.textContent = "100%";
+          return;
+        }
+        const dS = z.sigma - 0.5;
+        const dG = z.gamma - TRUE_GAMMAS[z.idx];
+        if (Math.abs(dS) < 0.045) {
+          dh.className = "dir-pill ok"; dh.textContent = "✅ 已踩中黄金线";
+        } else if (dS > 0) {
+          dh.className = "dir-pill warn"; dh.textContent = "⬅ 往左拉回黄金线";
+        } else {
+          dh.className = "dir-pill warn"; dh.textContent = "➡ 往右拉回黄金线";
+        }
+
+        if (Math.abs(dG) < 0.55) {
+          dv.className = "dir-pill ok"; dv.textContent = "🎯 音高已对准！";
+        } else if (dG < 0) {
+          dv.className = "dir-pill"; dv.textContent = "⬆ 再往上调高一点";
+        } else {
+          dv.className = "dir-pill"; dv.textContent = "⬇ 再往下调低一点";
+        }
+
+        const dist = Math.hypot(dS * 14, dG);
+        const pct = Math.max(5, Math.min(100, Math.round((1 - Math.min(1, dist / 7.5)) * 100)));
+        sf.style.width = pct + "%";
+        sp.textContent = pct + "%";
+      } else if (mode === "break") {
+        if (chaos) {
+          dh.className = "dir-pill warn"; dh.textContent = `🚨 已偏离黄金线 ±${metrics.offLineSeverity.toFixed(2)}`;
+          dv.className = "dir-pill warn"; dv.textContent = "加密秩序已击穿";
+          sf.style.width = "8%"; sp.textContent = "失控";
+        } else {
+          dh.className = "dir-pill ok"; dh.textContent = "✅ Re(s)=0.50 稳态";
+          dv.className = "dir-pill"; dv.textContent = "👈 试着拖歪任意珠子";
+          sf.style.width = "100%"; sp.textContent = "稳态";
+        }
+      } else {
+        dh.className = "dir-pill ok"; dh.textContent = `🎹 ${symphonyCount} 根音叉齐鸣`;
+        dv.className = "dir-pill"; dv.textContent = symphonyCount > 0 ? `最高频率 γ=${TRUE_GAMMAS[symphonyCount - 1].toFixed(1)}` : "滑动推子增加音叉";
+        const pct = Math.round((symphonyCount / TRUE_GAMMAS.length) * 100);
+        sf.style.width = Math.max(6, pct) + "%";
+        sp.textContent = `${symphonyCount}/30`;
+      }
+    }
+
+    function stepSim(dt) {
+      simTime += dt;
+      sonarWave = Math.max(0, sonarWave - dt * 0.9);
+      stringPluck *= Math.pow(0.08, dt);
+      zeros.forEach(z => { if (z.pulse > 0) z.pulse = Math.max(0, z.pulse - dt * 1.15); });
+
+      // 3秒实机示范校准动画
+      if (demoAnim) {
+        demoAnim.t += dt;
+        const p = Math.min(1, demoAnim.t / demoAnim.dur);
+        const ease = p * p * (3 - 2 * p);
+        demoAnim.z.sigma = demoAnim.s0 + (demoAnim.s1 - demoAnim.s0) * ease;
+        demoAnim.z.gamma = demoAnim.g0 + (demoAnim.g1 - demoAnim.g0) * ease;
+        if (p >= 1) {
+          const z = demoAnim.z; demoAnim = null;
+          lockZero(z);
+        }
+      }
+
+      if (mode === "tune" && activeDrag && !activeDrag.locked) {
+        const dS = Math.abs(activeDrag.sigma - 0.5), dG = Math.abs(activeDrag.gamma - TRUE_GAMMAS[activeDrag.idx]);
+        if (dS < 0.04 && dG < 0.42) {
+          lockHoldTime += dt;
+          if (lockHoldTime > 0.20) {
+            const z = activeDrag; activeDrag = null; updateDragTone(false); lockZero(z);
+          }
+        } else lockHoldTime = 0;
+      }
+
+      if (mode === "symphony" && symphonyPlaying) {
+        symphonyTimer += dt;
+        if (symphonyTimer >= 0.36) {
+          symphonyTimer = 0;
+          if (symphonyCount < TRUE_GAMMAS.length) {
+            symphonyCount++;
+            buildSymphonyMode(symphonyCount);
+            if (zeros[symphonyCount - 1]) zeros[symphonyCount - 1].pulse = 1.2;
+            stringPluck = 0.7;
+            playChime(TRUE_GAMMAS[symphonyCount - 1], symphonyCount - 1, 0.13, 0.7);
+          } else {
+            symphonyPlaying = false; renderDock();
+            showToast("🎼 30 阶黎曼素数交响乐演奏完成！");
+          }
+        }
+      }
+
+      const metrics = evaluateExplicitFormula(zeros);
+      lastMetrics = metrics;
+      const chaos = metrics.offLineSeverity > 0.08;
+      let litCount = 0;
+      metrics.litPrimes.forEach((lit, idx) => {
+        if (lit) litCount++;
+        if (lit && !prevLitPrimes[idx]) spawnPrimeSpark(PRIMES_SHOW[idx]);
+        primeChips[idx].className = "p-chip" + (chaos ? " broken" : (lit ? " lit" : ""));
+      });
+      prevLitPrimes = metrics.litPrimes.slice();
+
+      const mFit = document.getElementById("m-fit");
+      mFit.textContent = `${metrics.fitPct.toFixed(1)}%`;
+      mFit.className = "meter-v " + (chaos ? "danger" : (metrics.fitPct > 84 ? "good" : "gold"));
+
+      const mPrimes = document.getElementById("m-primes");
+      mPrimes.textContent = `${litCount} / ${PRIMES_SHOW.length}`;
+      mPrimes.className = "meter-v " + (chaos ? "danger" : "good");
+
+      if (mode === "break") {
+        const m3 = document.getElementById("m-third-v");
+        m3.textContent = `±${metrics.offLineSeverity.toFixed(2)}`;
+        m3.className = "meter-v " + (chaos ? "danger" : "good");
+      }
+
+      document.getElementById("card-plane").classList.toggle("chaos-alert", chaos);
+      document.getElementById("card-wave").classList.toggle("chaos-alert", chaos);
+      document.getElementById("dot-plane").className = "dot" + (chaos ? " red" : "");
+
+      updateCoachBar(metrics);
+      if (mode === "break") updateStoryTexts();
+
+      resizeCanvases();
+      drawPlane(metrics);
+      drawWave(metrics);
+    }
+
+    let lastTs = performance.now();
+    function rafLoop(ts) {
+      const dt = Math.min(0.05, Math.max(0.004, (ts - lastTs) / 1000));
+      lastTs = ts;
+      if (window._autoLoop) stepSim(dt);
+      requestAnimationFrame(rafLoop);
+    }
+
+    resizeCanvases();
+    renderGuide();
+    buildLevel(0);
+    stepSim(0.016);
+    requestAnimationFrame(rafLoop);
+
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space" && mode === "tune" && !document.getElementById("guide-mask").classList.contains("show")) {
+        e.preventDefault();
+        triggerSonar();
+      }
+    });
+
+    window.setMode = setMode;
+    window.buildLevel = buildLevel;
+    window.buildSymphonyMode = buildSymphonyMode;
+    window.openGuide = openGuide;
+    window.closeGuide = closeGuide;
+    window.stepGuide = stepGuide;
+    window.startAutoDemoFromGuide = startAutoDemoFromGuide;
+    window.startAutoDemoCurrent = startAutoDemoCurrent;
+    window.triggerSonar = triggerSonar;
+    window.autoSnapOne = autoSnapOne;
+    window.shatterHypothesis = shatterHypothesis;
+    window.restoreCriticalLine = restoreCriticalLine;
+    window.toggleSymphonyPlay = toggleSymphonyPlay;
+    window.strumAllZeros = strumAllZeros;
+    window.openPosterModal = openPosterModal;
+    window.closePosterModal = closePosterModal;
+    window.stepSim = stepSim;
+  </script>
+</body>
+</html>
